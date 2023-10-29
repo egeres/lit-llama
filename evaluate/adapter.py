@@ -21,7 +21,7 @@ from scripts.prepare_alpaca import generate_prompt
 
 from datasets import load_dataset
 
-instruction_tuning = True
+instruction_tuning = False
 
 
 def load_eval_data(dataset_name: str) -> str:

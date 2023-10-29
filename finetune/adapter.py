@@ -32,7 +32,7 @@ from scripts.prepare_alpaca import generate_prompt
 from lightning.fabric.strategies import DeepSpeedStrategy
 
 
-instruction_tuning = True
+instruction_tuning = False
 eval_interval = 600
 save_interval = 1000
 eval_iters = 100

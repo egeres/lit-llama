@@ -27,7 +27,7 @@ from lit_llama.utils import save_model_checkpoint
 from scripts.prepare_alpaca import generate_prompt
 
 
-instruction_tuning = True
+instruction_tuning = False
 eval_interval = 1000
 save_interval = 1000
 eval_iters = 100

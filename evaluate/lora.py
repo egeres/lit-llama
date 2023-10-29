@@ -21,7 +21,7 @@ from scripts.prepare_alpaca import generate_prompt
 
 from datasets import load_dataset
 
-instruction_tuning = True
+instruction_tuning = False
 lora_r = 8
 lora_alpha = 16
 lora_dropout = 0.05
