@@ -7,6 +7,7 @@ Note: If you run into a CUDA error "Expected is_sm80 to be true, but got false",
 
 # pip install -U deepspeed
 
+import json
 import os
 import pathlib
 import re
@@ -176,7 +177,16 @@ def train(
     Loosely based on the nanoGPT implementation: https://github.com/karpathy/nanoGPT.
     """
     step_count = 0
+    losses_training_sub = []
+    losses_training_so_far = []
     losses_validation_so_far = []
+
+    if os.path.exists(os.path.join(out_dir, "training.json")):
+        with open(os.path.join(out_dir, "training.json"), "r") as f:
+            losses_training_so_far = json.load(f)
+    if os.path.exists(os.path.join(out_dir, "validation.json")):
+        with open(os.path.join(out_dir, "validation.json"), "r") as f:
+            losses_validation_so_far = json.load(f)
 
     for iter_num in range(max_iters):
         if step_count <= warmup_iters:
@@ -193,6 +203,7 @@ def train(
         ):
             logits = model(input_ids)
             loss = loss_fn(logits, targets)
+            losses_training_sub.append(loss.item())
             fabric.backward(loss / gradient_accumulation_iters)
 
         if (iter_num + 1) % gradient_accumulation_iters == 0:
@@ -203,11 +214,23 @@ def train(
             if step_count % eval_interval == 0:
                 val_loss = validate(fabric, model, val_data, tokenizer_path)
 
-                # Plot the losses and save them
+                # Plot eval
                 losses_validation_so_far.append(val_loss)
                 plt.clf()
                 plt.plot(losses_validation_so_far, label="validation")
                 plt.savefig(os.path.join(out_dir, "validation.png"))
+
+                # Plot train
+                losses_training_so_far.append(np.mean(losses_training_sub))
+                losses_training_sub = []
+                plt.clf()
+                plt.plot(losses_training_so_far, label="training")
+                plt.savefig(os.path.join(out_dir, "training.png"))
+
+                with open(os.path.join(out_dir, "training.json"), "w") as f:
+                    json.dump(losses_training_so_far, f)
+                with open(os.path.join(out_dir, "validation.json"), "w") as f:
+                    json.dump(losses_validation_so_far, f)
 
                 fabric.print(f"step {iter_num}: val loss {val_loss:.4f}")
                 fabric.barrier()
